@@ -1,22 +1,27 @@
 var renderer, scene, camera, controls;
 var WIDTH, HEIGHT;
-var mesh, mesh2;
-var root;
 var clock;
+
 //let mixer, colorMixer;
-//var boneArr = [];
-//var raycaster = new THREE.Raycaster();
-//var mouse = new THREE.Vector2();
-//var boneControl = false;
 
-      
+var raycaster = new THREE.Raycaster();
+var mouse = new THREE.Vector2();
+var joints = []; 
+var selected;
 
-window.addEventListener("resize", stageResize);
+var displayTransform = true;
+
+var hexWhite = new THREE.Color( 0xffffff );
+var hexSoftLight = new THREE.Color( 0xffeac1 );
+
+var boxSize;
+
+
+window.addEventListener( "resize", stageResize );
 stageResize();
 init();
 
-//newLight( 0xffffbb, 1 );
-newLight( 0x1ace68, 1 );
+newLight( hexWhite, 1 );
         
 //Add Scene Elements
 uploadModel();
@@ -24,13 +29,16 @@ uploadModel();
 render();
 animate();
 
+/************************ INITIALIZERS *************************/
 function init() {
             
     // Renderer
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(WIDTH, HEIGHT);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setClearColor(0xffffff);
+    renderer.setClearColor( hexWhite );
+    renderer.gammaOutput = true;
+    renderer.gammaFactor = 2.2;
     document.body.appendChild(renderer.domElement);
 
     //Clock
@@ -46,13 +54,6 @@ function init() {
             
     // Scene
     scene = new THREE.Scene();
-        
-    //Adds Grid
-    //Need to tailor to specific model or scale all models
-    var gridHelper = new THREE.GridHelper( 5, 20 );
-    scene.add( gridHelper );
-
-            
 
     }
         
@@ -74,7 +75,7 @@ function stageResize() {
     WIDTH = window.innerWidth;
     HEIGHT = window.innerHeight;
 
-    if (renderer != undefined) {
+    if (renderer !== undefined) {
 
         renderer.setSize(WIDTH, HEIGHT);
         camera.aspect = WIDTH / HEIGHT;
@@ -84,51 +85,78 @@ function stageResize() {
 }
 
 function uploadModel() {
-    const gltfLoader = new THREE.GLTFLoader();
-    const gltfPath = 'Models/CesiumManFolder/CesiumMan.gltf';
-    //const gltfPath = 'Models/man_rigged/scene.gltf';
-    gltfLoader.load(
-        gltfPath,
+    const modelLoader = new THREE.GLTFLoader();
+    const path = 'Models/FemaleModel/Agreeing.glb'; 
+
+    modelLoader.load(
+        path,
         function( gltf ) {
             root = gltf.scene;
                 
             console.log("gltf: ",gltf);
             console.log("root: ",root);
-            console.log("gltfLoader: ",gltfLoader);
+            console.log("modelLoader: ",modelLoader);
 
-            root.traverse( function ( child ) {
-                if ( child.isMesh === true ) {
-
-                    //For variables
-                    console.log(child);
-
-                    //View Skeleton Rig
-                    var helper = new THREE.SkeletonHelper( child.skeleton.bones[ 0 ] );
-                    helper.visible = true;	
-                    scene.add( helper );
-                    console.log( helper );
-                            
-                }
-            });
-                    
-            //Add Model to scene
-            scene.add(root);
-                    
             //compute box with the model
             var box = new THREE.Box3().setFromObject(root);
-            var boxSize = box.getSize(new THREE.Vector3()).length();
+            boxSize = box.getSize(new THREE.Vector3()).length();
             var boxCenter = box.getCenter(new THREE.Vector3());
+            var jointSize = boxCenter.length()/44; //sphereSize always is (1/44) of length to boxcenter
+
+            console.log(boxCenter.length());
+            console.log(jointSize);
+
+            //Add joint spheres and manipulate texture            
+            root.traverse( function ( child ) {
+                   
+                if ( displayTransform && child.isBone ) {
+
+                    //Joints
+                    const fingers = [ "Pinky", "Ring", "Thumb", "Middle", "Index" ];
                     
-            //resize camera;
+                    if ( fingers.some( finger => child.name.includes(finger) ) ) {
+
+                        var joint = controlHandle( jointSize/3 );
+
+                    } else {
+
+                        var joint = controlHandle( jointSize );
+
+                    }
+                    
+                    joints.push( joint );
+                    child.add( joint );
+
+                }
+
+                if ( child.isMesh ) {
+                    
+                    child.material.color = { r: 1, g: 1, b: 1 }; 
+                    child.material.metalness = 0.1;
+                    child.material.roughness = 0.55;
+                            
+                } 
+            });
+
+            console.log(joints);
+
+            //Add Model to scene
+            scene.add(root);
+
+            //Resize camera;
             controls.maxDistance = boxSize*2;
             controls.target.copy(boxCenter);                    
             controls.update(); 
 
             //Adds Directional light for model based on boxSize 
-            addDirLight( 0,boxSize,boxSize );
-            addDirLight( 0,boxSize,-1*boxSize );
-            addDirLight( boxSize,boxSize,0 );
-            addDirLight( -1*boxSize,boxSize,0 );         
+            //addDirLight( 0,boxSize,boxSize );
+            //addDirLight( 0,boxSize,-1*boxSize );
+            //addDirLight( boxSize,boxSize,0 );
+            //addDirLight( -1*boxSize,boxSize,0 );    
+            
+            //Adds Grid
+            var gridHelper = new THREE.GridHelper( boxSize, 20 );
+            scene.add( gridHelper );
                     
         },
 
@@ -149,12 +177,20 @@ function uploadModel() {
     );
 }
         
-    //Creates World Lights
+/************************ LIGHTING *************************/
+
+//Creates World Lights
 function addDirLight( x,y,z ) {
-            
-    dirLight = new THREE.DirectionalLight(0xf44242);
+        
+    var worldLights = [];
+    dirLight = new THREE.DirectionalLight( hexSoftLight );
     dirLight.position.set( x,y,z );
     scene.add(dirLight);
+
+    //addDirLight( 0,boxSize,boxSize );
+            //addDirLight( 0,boxSize,-1*boxSize );
+            //addDirLight( boxSize,boxSize,0 );
+            //addDirLight( -1*boxSize,boxSize,0 );   
         
 }
         
@@ -166,59 +202,83 @@ function newLight( color, intensity ) {
     light.castShadow = true;
     scene.add(light);
             
-    var sphere = controlSphere();
-    light.add(sphere);
+    var handleSize = 3;
+    var handle = controlHandle( handleSize );
+    light.add(handle);
             
     addControls(light, "translate");
 
 }
+
+/************************ TRANSFORM CONTROLS *************************/
 
 function addControls(object, type) {
             
     var transformControl = new THREE.TransformControls( camera, renderer.domElement );
     transformControl.addEventListener( 'change', render );
     transformControl.addEventListener( 'dragging-changed', function ( event ) {
-    controls.enabled = ! event.value;
-    //transformControl.enabled = event.value;
-    //changePose(); //WILL FUCK UP WHEN USING FOR LIGHT
-} );
+        controls.enabled = ! event.value;  
+        //changePose(); //WILL FUCK UP WHEN USING FOR LIGHT
+    } );
             
     transformControl.attach( object );
     transformControl.setMode( type );
     transformControl.setSpace( "local" );
     scene.add( transformControl );
             
-            
-    transformControl.addEventListener( 'mousedown', function ( event ) {
-        transformControl.attach( object );
-        transformControl.setMode( type );
-        transformControl.setSpace( "local" );
-        scene.add( transformControl );
-    } );
-            
-    window.addEventListener( 'keypress', function ( event ) {
-        transformControl.detach( object );
-        transformControl.dispose();
-        scene.remove(transformControl);          
-    } );
-            
-    //return transformControl;
+    return transformControl;
+
 }
 
-//Maybe make for just lights
-function controlSphere() {
-            
-    var geometry = new THREE.SphereGeometry( .025, 10, 10 );
-    var material = new THREE.MeshNormalMaterial( { 
+function controlHandle( size ) {
+    
+    //var geometry = new THREE.SphereGeometry( size, 10, 10 );
+    var geometry = new THREE.TorusGeometry( size, size/2.5, 10, 10 );
+    var material = new THREE.MeshPhongMaterial( { 
         depthTest: false,
-        //color: 0x000000
+        color: hexWhite
     } );
-    var sphere = new THREE.Mesh( geometry, material );
-    sphere.material.receiveShadow = false;
-    sphere.material.castShadow = false;
-    sphere.material.wireframe = false;
-    sphere.renderOrder = 1;
 
-    return sphere;
+    var handle = new THREE.Mesh( geometry, material );
+    handle.material.receiveShadow = false;
+    handle.material.castShadow = false;
+    handle.material.wireframe = false;
+    handle.renderOrder = 1;
+
+    return handle;
             
+}
+
+/************************ JOINT RAYCASTER *************************/
+
+document.addEventListener('mousedown', function (event) {
+
+    event.preventDefault();
+    moveJoint( event.clientX, event.clientY );
+    
+}, false);
+  
+function moveJoint( x, y ) {
+    
+    mouse.x = (x / renderer.domElement.clientWidth) * 2 - 1;
+    mouse.y =  - (y / renderer.domElement.clientHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+
+    var intersects = raycaster.intersectObjects( joints );
+
+    if (intersects.length > 0) {
+
+        var selectedJoint = intersects[0].object;
+
+        if ( selected && selectedJoint) {
+
+            joints.forEach(child => child.material.color = { r: 1, g: 1, b: 1 });
+            selected.detach();
+        
+        }
+        
+        selectedJoint.material.color = { r: 0, g: 0, b: 1 };
+        selected = addControls( selectedJoint.parent, "rotate" ) 
+
+    }
 }
