@@ -11,52 +11,135 @@
         canvas {
             width: 100%;
             height: 100%;
-            position: static;
+        }
+        .right-links {
+            right: 50;
+            float: right;
         }
 
-        div {
-            break-inside: avoid;
-            /*padding: 20px;*/
-        }
         .sidebar {
-            width: 300px;
-            position: fixed;
+            width: 250px;
             height: 100%;
-
-            top: 28; /*height of the header*/
+            top: 0; /*height of the header*/
             right: 0;
+            position: fixed;
             background-color: rgb(255, 255, 255);
+            padding: 16px;
+        }
 
-            padding-top: 16px;
+        .sect-head {
+            margin: 0;
+        }
+
+        .sect-child {
+            margin: 0;
+        }
+
+        .slidecontainer {
+            width: 100%; /* Width of the outside container */
+        }
+
+            /* The slider itself */
+        .slider {
+            /*-webkit-appearance: none;  /* Override default CSS styles */
+            appearance: none;
+            width: 100%; /* Full-width */
+            height: 25px; /* Specified height */
+            background: #d3d3d3; /* Grey background */
+            /*outline: none; /* Remove outline */
+            /*opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+            /*-webkit-transition: .2s; /* 0.2 seconds transition on hover */
+            /*transition: opacity .2s;*/
         }
 
     </style>
 </head>
 <body>
-    <header style="margin:20px">
-        <div class="top-shelf">
+    
+    <div style="margin:20px">
+        <header>
             <h2>
                 <img src="tempImages/download.svg" alt="SketchSage" width="20" height="18">
                 SKETCH SAGE
-                <bdi style="float:right">
-                    <div>
-                        <button>ABOUT</button>
-                        <button>HOW TO</button>
-                    </div>
-                </bdi>
+                <div class="right-links">
+                    <button>ABOUT</button>
+                    <button>HOW TO</button>
+                </div>
             </h2>
-        </div>
-    </header>
+        </header>
+    </div>
     <div class="sidebar">
-        wasuuup
+        <div>
+            <h4 class="sect-head">COLOR</h4>
+        </div>
+        <div>
+            <h4 class="sect-head">BACKGROUND</h4>
+            <p class="sect-child">Sky Color</p>
+            <!--<input class="jscolor" onchange="update(this.jscolor)" value="cc66ff">-->
+            <input class="jscolor" onchange="lightColor(light1,this.jscolor)" value="cc66ff">
+            <!--<p id="rect" style="border:1px solid gray; width:161px; height:100px;">-->
+
+            <!--<script>
+            function update(jscolor) {
+                // 'jscolor' instance can be used as a string
+                //document.getElementById('rect').style.backgroundColor = '#' + jscolor
+                light1.color = "0x" + jscolor;
+                console.log(light1);
+            }
+            </script>-->
+            
+
+            
+            <h6 class="sect-child">Sunlight</h6>
+            <h6 class="sect-child">
+                Intensity
+                <div class="slidecontainer">
+                    <!--<input type="range" min="0" max="1" step="0.1" value="0.8" class="slider" id="myRange">-->
+                    <!--<p>Value: <span id="demo"></span></p>-->
+                    <!--<input type="range" min="-10" max="10">-->
+                </div>
+            </h6>
+        </div>
+        <div>
+            <h4 class="sect-head">SPOTLIGHT 1</1></h4>
+            <h6 class="sect-child">Color</h6>
+            <h6 class="sect-child">Intensity</h6>
+        </div>
+        <div>
+            <h4 class="sect-head">SPOTLIGHT 2</h4>
+            <h6 class="sect-child">Color</h6>
+            <h6 class="sect-child">Intensity</h6>
+        </div>
+        <div>
+            <h4 class="sect-head">SPOTLIGHT 3</h4>
+            <h6 class="sect-child">Color</h6>
+            <h6 class="sect-child">Intensity</h6>
+        </div>
+        <div>
+            <h4 class="sect-head">MODEL</h4>
+            <h6 class="sect-child">Skin Tone</h6>
+            <h6 class="sect-child">Reflectivity</h6>
+            <!--<h6 class="sect-child">Transparency</h6>-->
+            <h6 class="sect-child">Joints Visible</h6>
+            
+        </div>
     </div>
     
+    <!--THREE JS-->
     <script src="js/three.js"></script>
     <script src="js/OrbitControls.js"></script>
     <script src="js/GLTFLoader.js"></script> 
-    <script src="js/FBXLoader.js"></script> 
     <script src="js/TransformControls.js"></script> 
     <script src="js/mainElements.js"></script> 
-    <script src="js/inflate.min.js"></script> 
+    <!--<script src="js/FBXLoader.js"></script> -->
+    <!--<script src="js/inflate.min.js"></script>-->
+
+    <!--COLOR PICKER-->
+    <!--<script src="js/iro.min.js"></script>-->
+    <!--<script src="js/colorpicker.js"></script>-->
+    <script src="js/jscolor.js"></script>
+
+    <!--SLIDERS-->
+    <!--<script src="js/slider.js"></script>>-->
 </body>
 </html>

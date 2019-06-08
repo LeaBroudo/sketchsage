@@ -8,23 +8,27 @@ var raycaster = new THREE.Raycaster();
 var mouse = new THREE.Vector2();
 var joints = []; 
 var selected;
+const modelHeight = 150;
 
-var displayTransform = true;
+var displayTransform = true; //Doesn't really work, maybe use it to make joints[] invisible
+
+var worldLights = [];
+var light1, light2, light3;
 
 var hexWhite = new THREE.Color( 0xffffff );
 var hexSoftLight = new THREE.Color( 0xffeac1 );
 
-var boxSize;
-
-
 window.addEventListener( "resize", stageResize );
 stageResize();
 init();
-
-newLight( hexWhite, 1 );
         
 //Add Scene Elements
 uploadModel();
+light1 = newLight( hexWhite, 1 );
+//light2 = newLight( 0xFF33E2, 5 );
+//light2.color = hexSoftLight; //it works!
+addWorldLight();
+console.log(worldLights,light1);
 
 render();
 animate();
@@ -36,7 +40,7 @@ function init() {
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(WIDTH, HEIGHT);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setClearColor( hexWhite );
+    renderer.setClearColor( hexSoftLight );
     renderer.gammaOutput = true;
     renderer.gammaFactor = 2.2;
     document.body.appendChild(renderer.domElement);
@@ -72,7 +76,8 @@ function animate() {
 
 function stageResize() {
 
-    WIDTH = window.innerWidth;
+    WIDTH = window.innerWidth; 
+    //WIDTH = 600; 
     HEIGHT = window.innerHeight;
 
     if (renderer !== undefined) {
@@ -87,6 +92,8 @@ function stageResize() {
 function uploadModel() {
     const modelLoader = new THREE.GLTFLoader();
     const path = 'Models/FemaleModel/Agreeing.glb'; 
+    //const path = 'Models/CesiumManFolder/CesiumMan.gltf'; 
+
 
     modelLoader.load(
         path,
@@ -98,20 +105,28 @@ function uploadModel() {
             console.log("modelLoader: ",modelLoader);
 
             //compute box with the model
-            var box = new THREE.Box3().setFromObject(root);
-            boxSize = box.getSize(new THREE.Vector3()).length();
-            var boxCenter = box.getCenter(new THREE.Vector3());
-            var jointSize = boxCenter.length()/44; //sphereSize always is (1/44) of length to boxcenter
+            var intlBox = new THREE.Box3().setFromObject(root);
+            var intlCenter = intlBox.getCenter(new THREE.Vector3());
+            
+            var unscaledHeight = intlCenter.length() * 2;
+            var scaleFactor = modelHeight/unscaledHeight;
+ 
+            root.scale.set( scaleFactor, scaleFactor, scaleFactor );
 
-            console.log(boxCenter.length());
-            console.log(jointSize);
+            var finbox = new THREE.Box3().setFromObject(root);
+            var finCenter = finbox.getCenter(new THREE.Vector3());
 
-            //Add joint spheres and manipulate texture            
+            //Add joints and manipulate texture            
             root.traverse( function ( child ) {
-                   
+
                 if ( displayTransform && child.isBone ) {
 
                     //Joints
+                    var jointSize = modelHeight/88; 
+                    //jointSize always is (1/88) of the model's height, I THOUGHT
+                    //when doing cesium man, everything good excapt joint toruss were huge
+                    //think they might be connected to bone size? maybe just manualy make jointSize
+
                     const fingers = [ "Pinky", "Ring", "Thumb", "Middle", "Index" ];
                     
                     if ( fingers.some( finger => child.name.includes(finger) ) ) {
@@ -128,12 +143,16 @@ function uploadModel() {
                     child.add( joint );
 
                 }
-
+                
                 if ( child.isMesh ) {
                     
                     child.material.color = { r: 1, g: 1, b: 1 }; 
                     child.material.metalness = 0.1;
                     child.material.roughness = 0.55;
+
+                    if (child.name == "Eyelashes" ) {
+                        child.visible = false;
+                    }
                             
                 } 
             });
@@ -144,18 +163,12 @@ function uploadModel() {
             scene.add(root);
 
             //Resize camera;
-            controls.maxDistance = boxSize*2;
-            controls.target.copy(boxCenter);                    
-            controls.update(); 
-
-            //Adds Directional light for model based on boxSize 
-            //addDirLight( 0,boxSize,boxSize );
-            //addDirLight( 0,boxSize,-1*boxSize );
-            //addDirLight( boxSize,boxSize,0 );
-            //addDirLight( -1*boxSize,boxSize,0 );    
+            controls.maxDistance = modelHeight*2;
+            controls.target.copy( finCenter );                    
+            controls.update();  
             
             //Adds Grid
-            var gridHelper = new THREE.GridHelper( boxSize, 20 );
+            var gridHelper = new THREE.GridHelper( modelHeight*1.5, 20 );
             scene.add( gridHelper );
                     
         },
@@ -180,35 +193,96 @@ function uploadModel() {
 /************************ LIGHTING *************************/
 
 //Creates World Lights
-function addDirLight( x,y,z ) {
-        
-    var worldLights = [];
-    dirLight = new THREE.DirectionalLight( hexSoftLight );
-    dirLight.position.set( x,y,z );
-    scene.add(dirLight);
+function addWorldLight() {
+       
+    for ( i=0; i<4; i++ ) {
+        var light = new THREE.DirectionalLight( hexSoftLight );
+        worldLights.push( light );
+        scene.add( light );
+    }
 
-    //addDirLight( 0,boxSize,boxSize );
-            //addDirLight( 0,boxSize,-1*boxSize );
-            //addDirLight( boxSize,boxSize,0 );
-            //addDirLight( -1*boxSize,boxSize,0 );   
-        
+    worldLights[0].position.set( 0,modelHeight*3,modelHeight*3 );
+    worldLights[1].position.set( 0,modelHeight*3,-1*modelHeight*3 );
+    worldLights[2].position.set( modelHeight*3,modelHeight*3,0 );
+    worldLights[3].position.set( -1*modelHeight*3,modelHeight*3,0 );
+
 }
         
 //Creates Controllable Light
 function newLight( color, intensity ) {
 
-    var light = new THREE.DirectionalLight( color, intensity );
-    light.position.set( 1, 1, 1 );
+    //var light = new THREE.PointLight( color, intensity );
+    var light = new THREE.PointLight( color, intensity );
+    //light.position.set( 0, modelHeight, modelHeight/4 );
+    light.position.set( 0, modelHeight, modelHeight*Math.random() );
     light.castShadow = true;
     scene.add(light);
             
-    var handleSize = 3;
+    var handleSize = modelHeight/50;
     var handle = controlHandle( handleSize );
     light.add(handle);
-            
+        
     addControls(light, "translate");
+    
+    return light;
 
 }
+
+/************************ ALTER LIGHTING *************************/
+
+function lightColor( light, color ) {
+    
+    var hexColor = new THREE.Color( parseInt( "0x"+color ) );
+    
+    if ( light == worldLights ) {
+
+        for( var i=0; i<light.length(); i++ ) {
+            light[i].color = hexColor;
+        }
+
+    } else {
+
+        light.color = hexColor;
+
+    }
+}
+
+function lightIntensity( light, intensity ) {
+
+    if ( light == worldLights ) {
+
+        for( var i=0; i<light.length(); i++ ) {
+            light[i].intensity = intensity;
+        }
+
+    } else {
+
+        light.intensity = intensity;
+
+    }
+
+}
+
+function lightVisibility( light, tf ) {
+
+    if ( light == worldLights ) {
+
+        for( var i=0; i<light.length(); i++ ) {
+            light[i].visible = tf;
+        }
+
+    } else {
+
+        light.visible = tf;
+
+    }
+
+}
+
+
+//still to do:
+    //render background color
+    //model skintone/reflectivity/visible joints
 
 /************************ TRANSFORM CONTROLS *************************/
 
@@ -218,7 +292,7 @@ function addControls(object, type) {
     transformControl.addEventListener( 'change', render );
     transformControl.addEventListener( 'dragging-changed', function ( event ) {
         controls.enabled = ! event.value;  
-        //changePose(); //WILL FUCK UP WHEN USING FOR LIGHT
+        //changePose(); //WILL MESS UP WHEN USING FOR LIGHT
     } );
             
     transformControl.attach( object );
@@ -257,11 +331,15 @@ document.addEventListener('mousedown', function (event) {
     moveJoint( event.clientX, event.clientY );
     
 }, false);
-  
+
 function moveJoint( x, y ) {
+    //For x and y offset
+    //mouse.x = ( ( x - renderer.domElement.offsetLeft ) / renderer.domElement.clientWidth ) * 2 - 1;
+    mouse.y = - ( ( y - renderer.domElement.offsetTop ) / renderer.domElement.clientHeight ) * 2 + 1;
     
+    //Regular
     mouse.x = (x / renderer.domElement.clientWidth) * 2 - 1;
-    mouse.y =  - (y / renderer.domElement.clientHeight) * 2 + 1;
+    //mouse.y =  - (y / renderer.domElement.clientHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
 
     var intersects = raycaster.intersectObjects( joints );
