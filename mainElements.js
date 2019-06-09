@@ -13,7 +13,8 @@ const modelHeight = 150;
 var displayTransform = true; //Doesn't really work, maybe use it to make joints[] invisible
 
 var worldLights = [];
-var light1, light2, light3;
+var spotLights = [];
+var spotLightControls = [];
 
 var hexWhite = new THREE.Color( 0xffffff );
 var hexSoftLight = new THREE.Color( 0xffeac1 );
@@ -24,11 +25,8 @@ init();
         
 //Add Scene Elements
 uploadModel();
-light1 = newLight( hexWhite, 1 );
-//light2 = newLight( 0xFF33E2, 5 );
-//light2.color = hexSoftLight; //it works!
+addSpotLights();
 addWorldLight();
-console.log(worldLights,light1);
 
 render();
 animate();
@@ -93,7 +91,6 @@ function uploadModel() {
     const modelLoader = new THREE.GLTFLoader();
     const path = 'Models/FemaleModel/Agreeing.glb'; 
     //const path = 'Models/CesiumManFolder/CesiumMan.gltf'; 
-
 
     modelLoader.load(
         path,
@@ -209,22 +206,38 @@ function addWorldLight() {
 }
         
 //Creates Controllable Light
-function newLight( color, intensity ) {
+function addSpotLights() {
 
-    //var light = new THREE.PointLight( color, intensity );
-    var light = new THREE.PointLight( color, intensity );
+    var amount = 3;
     //light.position.set( 0, modelHeight, modelHeight/4 );
-    light.position.set( 0, modelHeight, modelHeight*Math.random() );
-    light.castShadow = true;
-    scene.add(light);
-            
-    var handleSize = modelHeight/50;
-    var handle = controlHandle( handleSize );
-    light.add(handle);
-        
-    addControls(light, "translate");
+    for ( var i=0; i<amount; i++ ) {
+
+        var light = new THREE.PointLight( hexWhite, 1 );
+        spotLights.push(light);
+        light.castShadow = true;
+        scene.add(light);
+
+        var handleSize = modelHeight/50;
+        var handle = controlHandle( handleSize );
+        light.add(handle);
+        controlAxes = addControls(light, "translate");
+        spotLightControls.push(controlAxes);
+
+        if (i>0) {
+
+            light.visible = false;
+            light.children.visible = false;
+            controlAxes.visible = false;
+
+        }
+
+    }
     
-    return light;
+    //Positions lights
+    spotLights[0].position.set( 0,modelHeight,modelHeight );
+    spotLights[1].position.set( -0.5*modelHeight,modelHeight,-1*modelHeight );
+    spotLights[2].position.set( modelHeight,modelHeight,0 );
+
 
 }
 
@@ -263,17 +276,23 @@ function lightIntensity( light, intensity ) {
 
 }
 
-function lightVisibility( light, tf ) {
+function lightVisibility( light ) {
 
+    
     if ( light == worldLights ) {
 
         for( var i=0; i<light.length(); i++ ) {
-            light[i].visible = tf;
+            
+            light[i].visible = ! light[i].visible;
+      
         }
 
     } else {
-
-        light.visible = tf;
+        
+        var opp = ! light.visible;
+        light.visible = opp;
+        light.children.visible = opp;
+        spotLightControls[spotLights.indexOf(light)].visible = opp;
 
     }
 

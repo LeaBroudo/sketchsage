@@ -35,6 +35,7 @@
             margin: 0;
         }
 
+        
         .slidecontainer {
             width: 100%; /* Width of the outside container */
         }
@@ -50,6 +51,10 @@
             /*opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
             /*-webkit-transition: .2s; /* 0.2 seconds transition on hover */
             /*transition: opacity .2s;*/
+        }
+
+        .jscolor {
+            border: white;
         }
 
     </style>
@@ -74,19 +79,12 @@
         </div>
         <div>
             <h4 class="sect-head">BACKGROUND</h4>
-            <p class="sect-child">Sky Color</p>
-            <!--<input class="jscolor" onchange="update(this.jscolor)" value="cc66ff">-->
-            <input class="jscolor" onchange="lightColor(light1,this.jscolor)" value="cc66ff">
-            <!--<p id="rect" style="border:1px solid gray; width:161px; height:100px;">-->
+            <span>
+                <p class="sect-child">Sky Color</p>
+                <!--<input class="jscolor" onchange="lightColor(light1,this.jscolor)" value="FFE4A6">-->
+            </span>
+            
 
-            <!--<script>
-            function update(jscolor) {
-                // 'jscolor' instance can be used as a string
-                //document.getElementById('rect').style.backgroundColor = '#' + jscolor
-                light1.color = "0x" + jscolor;
-                console.log(light1);
-            }
-            </script>-->
             
 
             
@@ -101,18 +99,31 @@
             </h6>
         </div>
         <div>
-            <h4 class="sect-head">SPOTLIGHT 1</1></h4>
-            <h6 class="sect-child">Color</h6>
+            <h4 class="sect-head">
+                SPOTLIGHT 1
+                <input type="button" onclick="lightVisibility(spotLights[0])" style="float:right"></input>
+            </h4>
+            
+            <p class="sect-child">
+                Color
+                <input class="jscolor" onchange="lightColor(spotLights[0],this.jscolor)" value="FFE4A6">
+            </p>
+            
+            
             <h6 class="sect-child">Intensity</h6>
         </div>
         <div>
             <h4 class="sect-head">SPOTLIGHT 2</h4>
-            <h6 class="sect-child">Color</h6>
+            <p class="sect-child">Color</p>
+            <input class="jscolor" onchange="lightColor(spotLights[1],this.jscolor)" value="FFE4A6">
+
             <h6 class="sect-child">Intensity</h6>
         </div>
         <div>
             <h4 class="sect-head">SPOTLIGHT 3</h4>
-            <h6 class="sect-child">Color</h6>
+            <p class="sect-child">Color</p>
+            <input class="jscolor" onchange="lightColor(spotLights[2],this.jscolor)" value="FFE4A6">
+
             <h6 class="sect-child">Intensity</h6>
         </div>
         <div>
