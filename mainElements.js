@@ -238,11 +238,10 @@ function addSpotLights() {
     spotLights[1].position.set( -0.5*modelHeight,modelHeight,-1*modelHeight );
     spotLights[2].position.set( modelHeight,modelHeight,0 );
 
-
 }
 
-/************************ ALTER LIGHTING *************************/
-
+/************************ ALTER STUFF *************************/
+//Lighting
 function lightColor( light, color ) {
     
     var hexColor = new THREE.Color( parseInt( "0x"+color ) );
@@ -295,6 +294,14 @@ function lightVisibility( light ) {
         spotLightControls[spotLights.indexOf(light)].visible = opp;
 
     }
+
+}
+
+//Renderer
+function setRendererColor( color ) {
+
+    var hexColor = new THREE.Color( parseInt( "0x"+color ) );
+    renderer.setClearColor( hexColor );
 
 }
 

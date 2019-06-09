@@ -75,14 +75,11 @@
     </div>
     <div class="sidebar">
         <div>
-            <h4 class="sect-head">COLOR</h4>
-        </div>
-        <div>
             <h4 class="sect-head">BACKGROUND</h4>
-            <span>
-                <p class="sect-child">Sky Color</p>
-                <!--<input class="jscolor" onchange="lightColor(light1,this.jscolor)" value="FFE4A6">-->
-            </span>
+            <p class="sect-child">
+                    Sky Color
+                    <input class="jscolor" onchange="setRendererColor(this.jscolor)" value="FFE4A6">
+                </p>
             
 
             
@@ -113,16 +110,26 @@
             <h6 class="sect-child">Intensity</h6>
         </div>
         <div>
-            <h4 class="sect-head">SPOTLIGHT 2</h4>
-            <p class="sect-child">Color</p>
-            <input class="jscolor" onchange="lightColor(spotLights[1],this.jscolor)" value="FFE4A6">
+            <h4 class="sect-head">
+                SPOTLIGHT 2
+                <input type="button" onclick="lightVisibility(spotLights[1])" style="float:right"></input>
+            </h4>
+            <p class="sect-child">
+                Color
+                <input class="jscolor" onchange="lightColor(spotLights[1],this.jscolor)" value="FFE4A6">
+            </p>
 
             <h6 class="sect-child">Intensity</h6>
         </div>
         <div>
-            <h4 class="sect-head">SPOTLIGHT 3</h4>
-            <p class="sect-child">Color</p>
-            <input class="jscolor" onchange="lightColor(spotLights[2],this.jscolor)" value="FFE4A6">
+            <h4 class="sect-head">
+                SPOTLIGHT 3
+                <input type="button" onclick="lightVisibility(spotLights[2])" style="float:right"></input>
+            </h4>
+            <p class="sect-child">
+                Color
+                <input class="jscolor" onchange="lightColor(spotLights[2],this.jscolor)" value="FFE4A6">
+            </p>
 
             <h6 class="sect-child">Intensity</h6>
         </div>
