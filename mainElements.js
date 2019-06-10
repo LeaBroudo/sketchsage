@@ -1,16 +1,13 @@
-var renderer, scene, camera, controls;
+var renderer, scene, camera, controls, root;
 var WIDTH, HEIGHT;
-var clock;
-
-//let mixer, colorMixer;
 
 var raycaster = new THREE.Raycaster();
 var mouse = new THREE.Vector2();
 var joints = []; 
-var selected;
+var selectedControls;
 const modelHeight = 150;
 
-var displayTransform = true; //Doesn't really work, maybe use it to make joints[] invisible
+//var displayTransform = true; //Doesn't really work, maybe use it to make joints[] invisible
 
 var worldLights = [];
 var spotLights = [];
@@ -18,6 +15,7 @@ var spotLightControls = [];
 
 var hexWhite = new THREE.Color( 0xffffff );
 var hexSoftLight = new THREE.Color( 0xffeac1 );
+var pink = new THREE.Color( 0xff1ccd );
 
 window.addEventListener( "resize", stageResize );
 stageResize();
@@ -42,9 +40,6 @@ function init() {
     renderer.gammaOutput = true;
     renderer.gammaFactor = 2.2;
     document.body.appendChild(renderer.domElement);
-
-    //Clock
-    //clock = new THREE.Clock();
 
     // Camera
     camera = new THREE.PerspectiveCamera(100, WIDTH / HEIGHT, 0.1, 1000);
@@ -116,7 +111,7 @@ function uploadModel() {
             //Add joints and manipulate texture            
             root.traverse( function ( child ) {
 
-                if ( displayTransform && child.isBone ) {
+                if ( child.isBone ) {
 
                     //Joints
                     var jointSize = modelHeight/88; 
@@ -143,14 +138,16 @@ function uploadModel() {
                 
                 if ( child.isMesh ) {
                     
-                    child.material.color = { r: 1, g: 1, b: 1 }; 
+                    //child.material.color = { r: 1, g: 1, b: 1 }; 
                     child.material.metalness = 0.1;
-                    child.material.roughness = 0.55;
+                    //child.material.roughness = roughness; //gloss coating almost
+                        //0: a lot --> 1: matte
+                    //child.material.glossiness = 0; //doesnt work as well
+                    //glossiness = 1 - roughness
 
-                    if (child.name == "Eyelashes" ) {
+                    if (child.name === "Eyelashes" ) {
                         child.visible = false;
                     }
-                            
                 } 
             });
 
@@ -194,6 +191,7 @@ function addWorldLight() {
        
     for ( i=0; i<4; i++ ) {
         var light = new THREE.DirectionalLight( hexSoftLight );
+        light.intensity = 0.6;
         worldLights.push( light );
         scene.add( light );
     }
@@ -246,9 +244,9 @@ function lightColor( light, color ) {
     
     var hexColor = new THREE.Color( parseInt( "0x"+color ) );
     
-    if ( light == worldLights ) {
+    if ( light === worldLights ) {
 
-        for( var i=0; i<light.length(); i++ ) {
+        for( var i=0; i<light.length; i++ ) {
             light[i].color = hexColor;
         }
 
@@ -259,28 +257,30 @@ function lightColor( light, color ) {
     }
 }
 
-function lightIntensity( light, intensity ) {
+function lightIntensity( light, inc ) { 
 
-    if ( light == worldLights ) {
+    if ( light === worldLights && light[0].intensity+inc<7.5 && light[0].intensity+inc>-0.5 ) {
 
-        for( var i=0; i<light.length(); i++ ) {
-            light[i].intensity = intensity;
+        for( var i=0; i<light.length; i++ ) {
+            
+            light[i].intensity += inc;
+
         }
+        
 
-    } else {
+    } else if ( light.intensity+inc<7.5 && light.intensity+inc>-0.5 ){
 
-        light.intensity = intensity;
-
-    }
-
+        light.intensity += inc;
+        
+    }   
 }
 
 function lightVisibility( light ) {
 
     
-    if ( light == worldLights ) {
+    if ( light === worldLights ) {
 
-        for( var i=0; i<light.length(); i++ ) {
+        for( var i=0; i<light.length; i++ ) {
             
             light[i].visible = ! light[i].visible;
       
@@ -302,12 +302,78 @@ function setRendererColor( color ) {
 
     var hexColor = new THREE.Color( parseInt( "0x"+color ) );
     renderer.setClearColor( hexColor );
+    console.log(hexColor);
+
+}
+
+//Model  WIP
+function setSkinTone( color ) {
+
+    console.log(color);
+    var hexColor = new THREE.Color( parseInt( "0x"+color ) );
+
+    if ( root ) {
+        console.log("hex: ",hexColor);
+        root.traverse( function( child ) {
+            if ( child.isMesh ) {
+
+                child.material.color = hexColor; 
+                console.log(child.material);
+                //find mesh for whites of eyes
+                //make it that model can be turned white
+
+            }
+        });
+    }
+}
+
+function transparency( inc ) {
+
+    if ( root ) {
+    
+        root.traverse( function( child ) {
+            if ( child.isMesh && child.material.opacity+inc>=0 && child.material.opacity+inc<=1) {
+
+                child.material.opacity += inc; 
+                
+                console.log(child.material.opacity);
+
+            }
+        });
+    }
 
 }
 
 
+function modelReflectivity( inc ) {
+
+    if (root) {
+        root.traverse( function ( child ) {
+            if (child.isMesh && child.material.roughness+inc>0 && child.material.roughness+inc<1) {
+                
+                child.material.roughness += inc;
+                console.log(child.material.roughness);
+            }
+        });
+    }
+}
+
+function jointsVisible() {
+
+    var opp = ! joints[0].visible;
+
+    for ( var i=0; i<joints.length; i++ ) {
+        joints[i].visible = opp;
+    }
+
+    if (selectedControls) {
+        selectedControls.visible = opp;
+    }
+}
+
+
+
 //still to do:
-    //render background color
     //model skintone/reflectivity/visible joints
 
 /************************ TRANSFORM CONTROLS *************************/
@@ -371,18 +437,21 @@ function moveJoint( x, y ) {
     var intersects = raycaster.intersectObjects( joints );
 
     if (intersects.length > 0) {
-
+        
         var selectedJoint = intersects[0].object;
 
-        if ( selected && selectedJoint) {
+        if ( selectedControls && selectedJoint) {
 
-            joints.forEach(child => child.material.color = { r: 1, g: 1, b: 1 });
-            selected.detach();
+            //Future fix vv, why change all color when can just change previous?
+            joints.forEach(child => child.material.color = { r: 1, g: 1, b: 1 }); 
+
+            selectedControls.detach();
         
         }
         
         selectedJoint.material.color = { r: 0, g: 0, b: 1 };
-        selected = addControls( selectedJoint.parent, "rotate" ) 
+        selectedControls = addControls( selectedJoint.parent, "rotate" ) 
+        console.log(selectedControls);
 
     }
 }

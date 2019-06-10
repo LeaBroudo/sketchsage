@@ -77,23 +77,26 @@
         <div>
             <h4 class="sect-head">BACKGROUND</h4>
             <p class="sect-child">
-                    Sky Color
-                    <input class="jscolor" onchange="setRendererColor(this.jscolor)" value="FFE4A6">
-                </p>
-            
+                Sky Color
+                <input class="jscolor" onchange="setRendererColor(this.jscolor)" value="FFE4A6">
+            </p>
+        </div>
+        <div>
+            <h4 class="sect-head">
+                SUNLIGHT
+                <input type="button" onclick="lightVisibility(worldLights)" style="float:right"></input>
+            </h4>
+            <p class="sect-child">
+                Color
+                <input class="jscolor" onchange="lightColor(worldLights,this.jscolor)" value="FFE4A6">
+            </p>
 
             
-
-            
-            <h6 class="sect-child">Sunlight</h6>
-            <h6 class="sect-child">
+            <p class="sect-child">
                 Intensity
-                <div class="slidecontainer">
-                    <!--<input type="range" min="0" max="1" step="0.1" value="0.8" class="slider" id="myRange">-->
-                    <!--<p>Value: <span id="demo"></span></p>-->
-                    <!--<input type="range" min="-10" max="10">-->
-                </div>
-            </h6>
+                <input type="button" onclick="lightIntensity(worldLights,-0.2)"></input>
+                <input type="button" onclick="lightIntensity(worldLights,0.2)"></input>
+            </p>
         </div>
         <div>
             <h4 class="sect-head">
@@ -105,9 +108,11 @@
                 Color
                 <input class="jscolor" onchange="lightColor(spotLights[0],this.jscolor)" value="FFE4A6">
             </p>
-            
-            
-            <h6 class="sect-child">Intensity</h6>
+            <p class="sect-child">
+                Intensity
+                <input type="button" onclick="lightIntensity(spotLights[0],-0.2)"></input>
+                <input type="button" onclick="lightIntensity(spotLights[0],0.2)"></input>
+            </p>
         </div>
         <div>
             <h4 class="sect-head">
@@ -118,8 +123,11 @@
                 Color
                 <input class="jscolor" onchange="lightColor(spotLights[1],this.jscolor)" value="FFE4A6">
             </p>
-
-            <h6 class="sect-child">Intensity</h6>
+            <p class="sect-child">
+                Intensity
+                <input type="button" onclick="lightIntensity(spotLights[1],-0.2)"></input>
+                <input type="button" onclick="lightIntensity(spotLights[1],0.2)"></input>
+            </p>
         </div>
         <div>
             <h4 class="sect-head">
@@ -130,15 +138,33 @@
                 Color
                 <input class="jscolor" onchange="lightColor(spotLights[2],this.jscolor)" value="FFE4A6">
             </p>
-
-            <h6 class="sect-child">Intensity</h6>
+            <p class="sect-child">
+                Intensity
+                <input type="button" onclick="lightIntensity(spotLights[2],-0.2)"></input>
+                <input type="button" onclick="lightIntensity(spotLights[2],0.2)"></input>
+            </p>
         </div>
         <div>
             <h4 class="sect-head">MODEL</h4>
-            <h6 class="sect-child">Skin Tone</h6>
-            <h6 class="sect-child">Reflectivity</h6>
+            <p class="sect-child">
+                Skin Tone
+                <input class="jscolor" onchange="setSkinTone(this.jscolor)" value="FFE4A6">
+            </p>
+            <!--<p class="sect-child">
+                Transparency
+                <input type="button" onclick="transparency(-0.02)"></input>
+                <input type="button" onclick="transparency(0.02)"></input>
+            </p>-->
+            <p class="sect-child">
+                Reflectivity
+                <input type="button" onclick="modelReflectivity(0.02)"></input>
+                <input type="button" onclick="modelReflectivity(-0.02)"></input>
+            </p>
             <!--<h6 class="sect-child">Transparency</h6>-->
-            <h6 class="sect-child">Joints Visible</h6>
+            <p class="sect-child">
+                Joints Visible
+                <input type="button" onclick="jointsVisible()"></input>
+            </p>
             
         </div>
     </div>
