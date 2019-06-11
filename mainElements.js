@@ -1,4 +1,4 @@
-var renderer, scene, camera, controls, root;
+var renderer, scene, camera, controls, root, grid;
 var WIDTH, HEIGHT;
 
 var raycaster = new THREE.Raycaster();
@@ -7,7 +7,7 @@ var joints = [];
 var selectedControls;
 const modelHeight = 150;
 
-//var displayTransform = true; //Doesn't really work, maybe use it to make joints[] invisible
+var liveModel = false;
 
 var worldLights = [];
 var spotLights = [];
@@ -17,12 +17,15 @@ var hexWhite = new THREE.Color( 0xffffff );
 var hexSoftLight = new THREE.Color( 0xffeac1 );
 var pink = new THREE.Color( 0xff1ccd );
 
+//var meshes = [];
+//var i = -1;
+
 window.addEventListener( "resize", stageResize );
 stageResize();
 init();
         
 //Add Scene Elements
-uploadModel();
+uploadModel( "Models/FemaleModel/Agreeing.glb" );
 addSpotLights();
 addWorldLight();
 
@@ -43,7 +46,7 @@ function init() {
 
     // Camera
     camera = new THREE.PerspectiveCamera(100, WIDTH / HEIGHT, 0.1, 1000);
-    camera.position.set(500, 0, 0);
+    camera.position.set(500, 250, 500);
 
     // Controls
     controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -69,8 +72,8 @@ function animate() {
 
 function stageResize() {
 
-    WIDTH = window.innerWidth; 
-    //WIDTH = 600; 
+    var sidebar = document.getElementById("sidebar");
+    WIDTH = window.innerWidth - sidebar.offsetWidth; 
     HEIGHT = window.innerHeight;
 
     if (renderer !== undefined) {
@@ -82,10 +85,16 @@ function stageResize() {
     }
 }
 
-function uploadModel() {
-    const modelLoader = new THREE.GLTFLoader();
-    const path = 'Models/FemaleModel/Agreeing.glb'; 
-    //const path = 'Models/CesiumManFolder/CesiumMan.gltf'; 
+function uploadModel( path ) {
+    
+    if ( liveModel ) {
+        disposeModel();
+    }
+
+    var modelLoader = new THREE.GLTFLoader();
+    var path = path;
+    //const path = 'Models/MaleModel/Agreeing.glb'; 
+    //const path = 'Models/FemaleModel/Agreeing.glb'; 
 
     modelLoader.load(
         path,
@@ -137,15 +146,10 @@ function uploadModel() {
                 }
                 
                 if ( child.isMesh ) {
-                    
-                    //child.material.color = { r: 1, g: 1, b: 1 }; 
-                    child.material.metalness = 0.1;
-                    //child.material.roughness = roughness; //gloss coating almost
-                        //0: a lot --> 1: matte
-                    //child.material.glossiness = 0; //doesnt work as well
-                    //glossiness = 1 - roughness
 
-                    if (child.name === "Eyelashes" ) {
+                    child.material.metalness = 0.1;
+                    
+                    if ( child.name === "Eyelashes" ) {
                         child.visible = false;
                     }
                 } 
@@ -162,8 +166,11 @@ function uploadModel() {
             controls.update();  
             
             //Adds Grid
-            var gridHelper = new THREE.GridHelper( modelHeight*1.5, 20 );
-            scene.add( gridHelper );
+            grid = new THREE.GridHelper( modelHeight*1.5, 20 );
+            scene.add( grid );
+
+            //Activates Live Model
+            liveModel = true;
                     
         },
 
@@ -182,6 +189,29 @@ function uploadModel() {
     
         }                           
     );
+}
+
+function disposeModel() {
+
+    if ( root ) {
+        scene.remove( root );
+        root.dispose();
+
+        for ( var i=0; i<joints.length; i++ ) {
+            scene.remove(joints[i]);
+            joints[i].material.dispose();
+            joints[i].geometry.dispose();
+        }
+
+        joints = [];
+        if ( selectedControls ) {
+            selectedControls.visible = false;
+        }
+
+        liveModel = false;
+
+    }
+
 }
         
 /************************ LIGHTING *************************/
@@ -302,31 +332,46 @@ function setRendererColor( color ) {
 
     var hexColor = new THREE.Color( parseInt( "0x"+color ) );
     renderer.setClearColor( hexColor );
-    console.log(hexColor);
+
+}
+
+function showGrid() {
+
+    grid.visible = ! grid.visible;
 
 }
 
 //Model  WIP
 function setSkinTone( color ) {
 
-    console.log(color);
     var hexColor = new THREE.Color( parseInt( "0x"+color ) );
 
     if ( root ) {
-        console.log("hex: ",hexColor);
         root.traverse( function( child ) {
-            if ( child.isMesh ) {
+            if ( child.isMesh && child.type === "SkinnedMesh" ) {
 
                 child.material.color = hexColor; 
-                console.log(child.material);
-                //find mesh for whites of eyes
-                //make it that model can be turned white
 
             }
         });
     }
 }
+/*
+//iterates through the meshes
+function findEyes( inc ) {
 
+    for (var j=0; j<meshes.length; j++) {
+        meshes[j].material.color = hexWhite; 
+    }
+    
+    i += inc;
+    
+    meshes[i].material.color = pink; 
+    console.log(meshes[i]);
+
+}
+*/
+/*
 function transparency( inc ) {
 
     if ( root ) {
@@ -343,7 +388,7 @@ function transparency( inc ) {
     }
 
 }
-
+*/
 
 function modelReflectivity( inc ) {
 
@@ -352,7 +397,7 @@ function modelReflectivity( inc ) {
             if (child.isMesh && child.material.roughness+inc>0 && child.material.roughness+inc<1) {
                 
                 child.material.roughness += inc;
-                console.log(child.material.roughness);
+
             }
         });
     }
@@ -371,10 +416,6 @@ function jointsVisible() {
     }
 }
 
-
-
-//still to do:
-    //model skintone/reflectivity/visible joints
 
 /************************ TRANSFORM CONTROLS *************************/
 
@@ -408,7 +449,6 @@ function controlHandle( size ) {
     var handle = new THREE.Mesh( geometry, material );
     handle.material.receiveShadow = false;
     handle.material.castShadow = false;
-    handle.material.wireframe = false;
     handle.renderOrder = 1;
 
     return handle;
@@ -451,7 +491,6 @@ function moveJoint( x, y ) {
         
         selectedJoint.material.color = { r: 0, g: 0, b: 1 };
         selectedControls = addControls( selectedJoint.parent, "rotate" ) 
-        console.log(selectedControls);
-
+ 
     }
 }
