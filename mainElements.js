@@ -166,8 +166,12 @@ function uploadModel( path ) {
             controls.update();  
             
             //Adds Grid
-            grid = new THREE.GridHelper( modelHeight*1.5, 20 );
-            scene.add( grid );
+            if ( ! grid ) {
+
+                grid = new THREE.GridHelper( modelHeight*1.5, 20 );
+                scene.add( grid );
+
+            }
 
             //Activates Live Model
             liveModel = true;
