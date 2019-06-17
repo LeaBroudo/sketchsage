@@ -1,0 +1,121 @@
+body {
+    margin: 0px;
+    height: 100%; 
+    overflow: hidden;
+}
+
+h2 {
+    font-family: "shrikhand";
+}
+
+a {
+    color:black;
+}
+
+button {
+    border: none;
+    background: none;       
+}
+
+.b-text {
+    font-family: "shrikhand";
+    font-size: 20px;
+}
+
+canvas {
+    width: 90%;
+    height: 100%;
+}
+
+
+input {
+    width: 60px; 
+    height: 13px;
+    border: white;
+    font-family: "umma";
+    font-size: 10px;
+}
+
+.right-links {
+    /*right: 50;*/
+    float: right;
+    font-family: "shrikhand";
+    font-size: 20px;
+}
+
+footer {
+    font-size: 7px;
+    padding-top: 70px;
+}
+
+.controls {
+    display: block;
+}
+
+.about {
+    display: none;
+}
+
+.how-to {
+    display: none;
+}
+
+.sidebar {
+    width: 200px;
+    height: 100%;
+    top: 1; 
+    right: 0;
+    position: fixed;
+    background-color: rgb(255, 255, 255);
+    padding-left: 16px;
+    padding-right: 16px;
+    overflow: scroll;
+    font-family: "unna";
+    display: block;
+
+}
+
+.sect-head {
+    margin: 0;
+    /*padding-top: 10px;
+    padding-bottom: 6px;*/
+    font-weight: 900;
+    /*text-decoration: underline;*/
+}
+
+.sect-child {
+    margin: 0;
+    /*padding-left: 15px;*/
+    padding-bottom: 3px;
+    padding-top: 3px;
+}
+
+.column {
+    float: left;
+    padding: 10px;
+}
+
+.name {
+    width: 100px;
+}
+
+.function {
+    width: 60px;
+}
+  
+/* Clear floats after the columns */
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+@font-face {
+    font-family: "shrikhand";
+    src: url("fonts/shrikhand/Shrikhand-Regular.ttf");
+}
+
+@font-face {
+    font-family: "unna";
+    src: url("fonts/unna/Unna-Regular.ttf");
+}
