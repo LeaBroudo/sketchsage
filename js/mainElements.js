@@ -1,35 +1,29 @@
-var renderer, scene, camera, controls;
+var renderer, scene, camera, controls, root, grid;
 var WIDTH, HEIGHT;
-var clock;
-
-//let mixer, colorMixer;
 
 var raycaster = new THREE.Raycaster();
 var mouse = new THREE.Vector2();
 var joints = []; 
-var selected;
+var selectedControls;
 const modelHeight = 150;
 
-var displayTransform = true; //Doesn't really work, maybe use it to make joints[] invisible
+var liveModel = false;
 
 var worldLights = [];
-var light1;
-var light2;
-var light3;
-
+var spotLights = [];
+var spotLightControls = [];
 
 var hexWhite = new THREE.Color( 0xffffff );
 var hexSoftLight = new THREE.Color( 0xffeac1 );
+var lightBlue = new THREE.Color( 0xA3CEFF );
 
 window.addEventListener( "resize", stageResize );
 stageResize();
 init();
         
 //Add Scene Elements
-uploadModel();
-light1 = newLight( hexWhite, 1 );
-//light2 = newLight( 0xFF33E2, 5 );
-//light2.color = hexSoftLight; //it works!
+uploadModel( "Models/FemaleModel/Agreeing.glb" );
+addSpotLights();
 addWorldLight();
 
 render();
@@ -42,17 +36,14 @@ function init() {
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(WIDTH, HEIGHT);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setClearColor( hexWhite );
+    renderer.setClearColor( lightBlue );
     renderer.gammaOutput = true;
     renderer.gammaFactor = 2.2;
     document.body.appendChild(renderer.domElement);
 
-    //Clock
-    //clock = new THREE.Clock();
-
     // Camera
     camera = new THREE.PerspectiveCamera(100, WIDTH / HEIGHT, 0.1, 1000);
-    camera.position.set(500, 0, 0);
+    camera.position.set(150, 150, 150);
 
     // Controls
     controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -78,7 +69,8 @@ function animate() {
 
 function stageResize() {
 
-    WIDTH = window.innerWidth;
+    var sidebar = document.getElementById("sidebar");
+    WIDTH = window.innerWidth - sidebar.offsetWidth; 
     HEIGHT = window.innerHeight;
 
     if (renderer !== undefined) {
@@ -90,20 +82,23 @@ function stageResize() {
     }
 }
 
-function uploadModel() {
-    const modelLoader = new THREE.GLTFLoader();
-    const path = 'Models/FemaleModel/Agreeing.glb'; 
-    //const path = 'Models/CesiumManFolder/CesiumMan.gltf'; 
+function uploadModel( path ) {
+    
+    if ( liveModel ) {
+        disposeModel();
+    }
 
+    var modelLoader = new THREE.GLTFLoader();
+    var path = path;
 
     modelLoader.load(
         path,
         function( gltf ) {
             root = gltf.scene;
                 
-            console.log("gltf: ",gltf);
-            console.log("root: ",root);
-            console.log("modelLoader: ",modelLoader);
+            //console.log("gltf: ",gltf);
+            //console.log("root: ",root);
+            //console.log("modelLoader: ",modelLoader);
 
             //compute box with the model
             var intlBox = new THREE.Box3().setFromObject(root);
@@ -119,14 +114,11 @@ function uploadModel() {
 
             //Add joints and manipulate texture            
             root.traverse( function ( child ) {
-                ///*
-                if ( displayTransform && child.isBone ) {
+
+                if ( child.isBone ) {
 
                     //Joints
                     var jointSize = modelHeight/88; 
-                    //jointSize always is (1/88) of the model's height, I THOUGHT
-                    //when doing cesium man, everything good excapt joint toruss were huge
-                    //think they might be connected to bone size? maybe just manualy make jointSize
 
                     const fingers = [ "Pinky", "Ring", "Thumb", "Middle", "Index" ];
                     
@@ -144,21 +136,18 @@ function uploadModel() {
                     child.add( joint );
 
                 }
-                //*/
+                
                 if ( child.isMesh ) {
-                    
-                    child.material.color = { r: 1, g: 1, b: 1 }; 
-                    child.material.metalness = 0.1;
-                    child.material.roughness = 0.55;
 
-                    if (child.name == "Eyelashes" ) {
+                    child.material.metalness = 0.1;
+                    
+                    if ( child.name === "Eyelashes" ) {
                         child.visible = false;
                     }
-                            
                 } 
             });
 
-            console.log(joints);
+            //console.log(joints);
 
             //Add Model to scene
             scene.add(root);
@@ -166,17 +155,18 @@ function uploadModel() {
             //Resize camera;
             controls.maxDistance = modelHeight*2;
             controls.target.copy( finCenter );                    
-            controls.update(); 
-
-            //Adds Directional light for model based on boxSize 
-            //addDirLight( 0,boxSize,boxSize );
-            //addDirLight( 0,boxSize,-1*boxSize );
-            //addDirLight( boxSize,boxSize,0 );
-            //addDirLight( -1*boxSize,boxSize,0 );    
+            controls.update();  
             
             //Adds Grid
-            var gridHelper = new THREE.GridHelper( modelHeight*1.5, 20 );
-            scene.add( gridHelper );
+            if ( ! grid ) {
+
+                grid = new THREE.GridHelper( modelHeight*1.5, 20, 0x565656, 0x565656 );
+                scene.add( grid );
+
+            }
+
+            //Activates Live Model
+            liveModel = true;
                     
         },
 
@@ -196,6 +186,29 @@ function uploadModel() {
         }                           
     );
 }
+
+function disposeModel() {
+
+    if ( root ) {
+        scene.remove( root );
+        root.dispose();
+
+        for ( var i=0; i<joints.length; i++ ) {
+            scene.remove(joints[i]);
+            joints[i].material.dispose();
+            joints[i].geometry.dispose();
+        }
+
+        joints = [];
+        if ( selectedControls ) {
+            selectedControls.visible = false;
+        }
+
+        liveModel = false;
+
+    }
+
+}
         
 /************************ LIGHTING *************************/
 
@@ -204,6 +217,7 @@ function addWorldLight() {
        
     for ( i=0; i<4; i++ ) {
         var light = new THREE.DirectionalLight( hexSoftLight );
+        light.intensity = 0.6;
         worldLights.push( light );
         scene.add( light );
     }
@@ -216,22 +230,153 @@ function addWorldLight() {
 }
         
 //Creates Controllable Light
-function newLight( color, intensity ) {
+function addSpotLights() {
 
-    var light = new THREE.PointLight( color, intensity );
+    var amount = 3;
     //light.position.set( 0, modelHeight, modelHeight/4 );
-    light.position.set( 0, modelHeight, modelHeight*Math.random() );
-    light.castShadow = true;
-    scene.add(light);
-            
-    var handleSize = modelHeight/50;
-    var handle = controlHandle( handleSize );
-    light.add(handle);
-        
-    addControls(light, "translate");
-    
-    return light;
+    for ( var i=0; i<amount; i++ ) {
 
+        var light = new THREE.PointLight( hexWhite, 1 );
+        spotLights.push(light);
+        light.castShadow = true;
+        scene.add(light);
+
+        var handleSize = modelHeight/50;
+        var handle = controlHandle( handleSize );
+        light.add(handle);
+        controlAxes = addControls(light, "translate");
+        spotLightControls.push(controlAxes);
+
+        if (i>0) {
+
+            light.visible = false;
+            light.children.visible = false;
+            controlAxes.visible = false;
+
+        }
+
+    }
+    
+    //Positions lights
+    spotLights[0].position.set( 0,modelHeight,modelHeight );
+    spotLights[1].position.set( -0.5*modelHeight,modelHeight,-1*modelHeight );
+    spotLights[2].position.set( modelHeight,modelHeight,0 );
+
+}
+
+/************************ ALTER STUFF *************************/
+//Lighting
+function lightColor( light, color ) {
+    
+    var hexColor = new THREE.Color( parseInt( "0x"+color ) );
+    
+    if ( light === worldLights ) {
+
+        for( var i=0; i<light.length; i++ ) {
+            light[i].color = hexColor;
+        }
+
+    } else {
+
+        light.color = hexColor;
+
+    }
+}
+
+function lightIntensity( light, inc ) { 
+
+    if ( light === worldLights && light[0].intensity+inc<7.5 && light[0].intensity+inc>-0.5 ) {
+
+        for( var i=0; i<light.length; i++ ) {
+            
+            light[i].intensity += inc;
+
+        }
+        
+
+    } else if ( light.intensity+inc<7.5 && light.intensity+inc>-0.5 ){
+
+        light.intensity += inc;
+        
+    }   
+}
+
+function lightVisibility( light ) {
+
+    
+    if ( light === worldLights ) {
+
+        for( var i=0; i<light.length; i++ ) {
+            
+            light[i].visible = ! light[i].visible;
+      
+        }
+
+    } else {
+        
+        var opp = ! light.visible;
+        light.visible = opp;
+        light.children.visible = opp;
+        spotLightControls[spotLights.indexOf(light)].visible = opp;
+
+    }
+
+}
+
+//Renderer
+function setRendererColor( color ) {
+
+    var hexColor = new THREE.Color( parseInt( "0x"+color ) );
+    renderer.setClearColor( hexColor );
+
+}
+
+function showGrid() {
+
+    grid.visible = ! grid.visible;
+
+}
+
+//Model 
+function setSkinTone( color ) {
+
+    var hexColor = new THREE.Color( parseInt( "0x"+color ) );
+
+    if ( root ) {
+        root.traverse( function( child ) {
+            if ( child.isMesh && child.type === "SkinnedMesh" ) {
+
+                child.material.color = hexColor; 
+
+            }
+        });
+    }
+}
+
+function modelReflectivity( inc ) {
+
+    if (root) {
+        root.traverse( function ( child ) {
+            if (child.isMesh && child.material.roughness+inc>0 && child.material.roughness+inc<1) {
+                
+                child.material.roughness += inc;
+
+            }
+        });
+    }
+}
+
+function jointsVisible() {
+
+    var opp = ! joints[0].visible;
+
+    for ( var i=0; i<joints.length; i++ ) {
+        joints[i].visible = opp;
+    }
+
+    if (selectedControls) {
+        selectedControls.visible = opp;
+    }
 }
 
 /************************ TRANSFORM CONTROLS *************************/
@@ -256,7 +401,6 @@ function addControls(object, type) {
 
 function controlHandle( size ) {
     
-    //var geometry = new THREE.SphereGeometry( size, 10, 10 );
     var geometry = new THREE.TorusGeometry( size, size/2.5, 10, 10 );
     var material = new THREE.MeshPhongMaterial( { 
         depthTest: false,
@@ -266,7 +410,6 @@ function controlHandle( size ) {
     var handle = new THREE.Mesh( geometry, material );
     handle.material.receiveShadow = false;
     handle.material.castShadow = false;
-    handle.material.wireframe = false;
     handle.renderOrder = 1;
 
     return handle;
@@ -283,26 +426,32 @@ document.addEventListener('mousedown', function (event) {
 }, false);
 
 function moveJoint( x, y ) {
+    //For x and y offset
+    //mouse.x = ( ( x - renderer.domElement.offsetLeft ) / renderer.domElement.clientWidth ) * 2 - 1;
+    mouse.y = - ( ( y - renderer.domElement.offsetTop ) / renderer.domElement.clientHeight ) * 2 + 1;
     
+    //Regular
     mouse.x = (x / renderer.domElement.clientWidth) * 2 - 1;
-    mouse.y =  - (y / renderer.domElement.clientHeight) * 2 + 1;
+    //mouse.y =  - (y / renderer.domElement.clientHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
 
     var intersects = raycaster.intersectObjects( joints );
 
     if (intersects.length > 0) {
-
+        
         var selectedJoint = intersects[0].object;
 
-        if ( selected && selectedJoint) {
+        if ( selectedControls && selectedJoint) {
 
-            joints.forEach(child => child.material.color = { r: 1, g: 1, b: 1 });
-            selected.detach();
+            //Future fix vv, why change all color when can just change previous?
+            joints.forEach(child => child.material.color = { r: 1, g: 1, b: 1 }); 
+
+            selectedControls.detach();
         
         }
         
         selectedJoint.material.color = { r: 0, g: 0, b: 1 };
-        selected = addControls( selectedJoint.parent, "rotate" ) 
-
+        selectedControls = addControls( selectedJoint.parent, "rotate" ) 
+ 
     }
 }
