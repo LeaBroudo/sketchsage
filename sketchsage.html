@@ -8,7 +8,6 @@
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-
         gtag('config', 'UA-142381248-1');
     </script>
     <link rel="stylesheet" href="styling/styleFile.css">
@@ -75,8 +74,8 @@
                     <h3 class="sect-head">BACKGROUND</h3>
                     <div class="row">
                         <div class="column name">
-                            <p class="sect-child">Sky Color</p>
-                            <p class="sect-child">Grid Visibility</p>
+                            <p class="sect-child">Sky Color:</p>
+                            <p class="sect-child">Grid Visibility:</p>
                         </div>
                         <div class="column function">
                             <input onchange="setRendererColor(this.jscolor)" class="jscolor {borderWidth:1,
@@ -91,25 +90,12 @@
                     <h3 class="sect-head">MODEL</h3>
                     <div class="row">
                         <div class="column name">
-                            <p class="sect-child">Type</p>
-                            <p class="sect-child">Skin Tone</p>
-                            <p class="sect-child">Reflectivity</p>
-                            <p class="sect-child">Joint Visibility</p>
+                            <p class="sect-child">Skin Tone:</p>
+                            <p class="sect-child">Reflectivity:</p>
+                            <p class="sect-child">Joint Visibility:</p>
+                            <p class="sect-child">Type:</p>
                         </div>
                         <div class="column function">
-                            <div style="padding-top:5px;padding-bottom:2px"> 
-                                <button onclick="uploadModel('Models/FemaleModel/Agreeing.glb');checkVis();">
-                                    <img src="styling/images/female-symbol.svg" height="12" width="12">
-                                </button>
-                                <button onclick="uploadModel('Models/MaleModel/Agreeing.glb');checkVis();">
-                                    <img src="styling/images/male-symbol.svg" height="12" width="12">
-                                </button>
-                                <script>
-                                    function checkVis() {
-                                        document.getElementById("joint-eye").src = "styling/images/eye.svg";
-                                    }
-                                </script>
-                            </div>
                             <input onchange="setSkinTone(this.jscolor)" class="jscolor {borderWidth:1,
                             borderColor:'#CCC', backgroundColor:'#FFF', insetColor:'#FFF'}" value="FFE4A6"> 
                             <div style="padding-top:10px;">
@@ -123,9 +109,23 @@
                             <button onclick="jointsVisible();changeImage('joint-eye');" style="padding-top:5px;">
                                 <img id="joint-eye" src="styling/images/eye.svg" height="15" width="15">
                             </button>
+                            <div style="padding-top:5px;padding-bottom:2px"> 
+                                <button onclick="uploadModel('Models/FemaleModel/Agreeing.glb');checkVis();">
+                                    <img src="styling/images/female-symbol.svg" height="12" width="12">
+                                </button>
+                                <button onclick="uploadModel('Models/MaleModel/Agreeing.glb');checkVis();">
+                                    <img src="styling/images/male-symbol.svg" height="12" width="12">
+                                </button>
+                                <script>
+                                    function checkVis() {
+                                        document.getElementById("joint-eye").src = "styling/images/eye.svg";
+                                    }
+                                </script>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <!--Imbalance-->
                 <div>
                     <h3 class="sect-head">
                         SUNLIGHT
@@ -135,8 +135,8 @@
                     </h3>
                     <div class="row">
                         <div class="column name">
-                            <p class="sect-child">Color</p>
-                            <p class="sect-child">Intensity</p>
+                            <p class="sect-child">Color:</p>
+                            <p class="sect-child">Intensity:</p>
                         </div>
                         <div class="column function">
                             <input onchange="lightColor(worldLights,this.jscolor)" class="jscolor{borderWidth:1,
@@ -161,8 +161,8 @@
                     </h3>
                     <div class="row">
                         <div class="column name">
-                            <p class="sect-child">Color</p>
-                            <p class="sect-child">Intensity</p>
+                            <p class="sect-child">Color:</p>
+                            <p class="sect-child">Intensity:</p>
                         </div>
                         <div class="column function">
                             <input onchange="lightColor(spotLights[0],this.jscolor)" class="jscolor {borderWidth:1,
@@ -187,8 +187,8 @@
                     </h3>
                     <div class="row">
                         <div class="column name">
-                            <p class="sect-child">Color</p>
-                            <p class="sect-child">Intensity</p>
+                            <p class="sect-child">Color:</p>
+                            <p class="sect-child">Intensity:</p>
                         </div>
                     <div class="column function">
                             <input onchange="lightColor(spotLights[1],this.jscolor)" class="jscolor {borderWidth:1,
@@ -213,8 +213,8 @@
                     </h3>
                     <div class="row">
                         <div class="column name">
-                            <p class="sect-child">Color</p>
-                            <p class="sect-child">Intensity</p>
+                            <p class="sect-child">Color:</p>
+                            <p class="sect-child">Intensity:</p>
                         </div>
                         <div class="column function">
                             <input onchange="lightColor(spotLights[2],this.jscolor)" class="jscolor {borderWidth:1,
@@ -239,6 +239,9 @@
             </footer>
         </div>
         
+        <!--LOADER-->
+        <div id="loader">Loading Model...</div>
+
         <!--THREE JS-->
         <script src="js/three.js"></script>
         <script src="js/OrbitControls.js"></script>

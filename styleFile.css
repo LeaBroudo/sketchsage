@@ -27,7 +27,6 @@ canvas {
     height: 100%;
 }
 
-
 input {
     width: 60px; 
     height: 13px;
@@ -108,6 +107,16 @@ footer {
     content: "";
     display: table;
     clear: both;
+}
+
+#loader {
+    position: absolute;
+    top: 50%;
+    width: 75%;
+    text-align: center;
+    color: rgb(249, 69, 28);
+    font-weight: bold;
+    font-family: "shrikhand";
 }
 
 @font-face {

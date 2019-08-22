@@ -15,10 +15,7 @@ var spotLightControls = [];
 
 var hexWhite = new THREE.Color( 0xffffff );
 var hexSoftLight = new THREE.Color( 0xffeac1 );
-var pink = new THREE.Color( 0xff1ccd );
-
-//var meshes = [];
-//var i = -1;
+var lightBlue = new THREE.Color( 0xA3CEFF );
 
 window.addEventListener( "resize", stageResize );
 stageResize();
@@ -39,14 +36,14 @@ function init() {
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(WIDTH, HEIGHT);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setClearColor( hexSoftLight );
+    renderer.setClearColor( lightBlue );
     renderer.gammaOutput = true;
     renderer.gammaFactor = 2.2;
     document.body.appendChild(renderer.domElement);
 
     // Camera
-    camera = new THREE.PerspectiveCamera(100, WIDTH / HEIGHT, 0.1, 1000);
-    camera.position.set(500, 250, 500);
+    camera = new THREE.PerspectiveCamera(50, WIDTH / HEIGHT, 0.1, 1000);
+    camera.position.set(150, 150, 150);
 
     // Controls
     controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -55,7 +52,7 @@ function init() {
     // Scene
     scene = new THREE.Scene();
 
-    }
+}
         
 function render() {
 
@@ -93,17 +90,15 @@ function uploadModel( path ) {
 
     var modelLoader = new THREE.GLTFLoader();
     var path = path;
-    //const path = 'Models/MaleModel/Agreeing.glb'; 
-    //const path = 'Models/FemaleModel/Agreeing.glb'; 
 
     modelLoader.load(
         path,
         function( gltf ) {
             root = gltf.scene;
                 
-            console.log("gltf: ",gltf);
-            console.log("root: ",root);
-            console.log("modelLoader: ",modelLoader);
+            //console.log("gltf: ",gltf);
+            //console.log("root: ",root);
+            //console.log("modelLoader: ",modelLoader);
 
             //compute box with the model
             var intlBox = new THREE.Box3().setFromObject(root);
@@ -124,9 +119,6 @@ function uploadModel( path ) {
 
                     //Joints
                     var jointSize = modelHeight/88; 
-                    //jointSize always is (1/88) of the model's height, I THOUGHT
-                    //when doing cesium man, everything good excapt joint toruss were huge
-                    //think they might be connected to bone size? maybe just manualy make jointSize
 
                     const fingers = [ "Pinky", "Ring", "Thumb", "Middle", "Index" ];
                     
@@ -153,9 +145,9 @@ function uploadModel( path ) {
                         child.visible = false;
                     }
                 } 
-            });
+            } );
 
-            console.log(joints);
+            //console.log(joints);
 
             //Add Model to scene
             scene.add(root);
@@ -168,7 +160,7 @@ function uploadModel( path ) {
             //Adds Grid
             if ( ! grid ) {
 
-                grid = new THREE.GridHelper( modelHeight*1.5, 20 );
+                grid = new THREE.GridHelper( modelHeight*1.5, 20, 0x565656, 0x565656 );
                 scene.add( grid );
 
             }
@@ -181,7 +173,14 @@ function uploadModel( path ) {
         // called while loading is progressing
         function ( xhr ) {
 
-            console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+            var perc = xhr.loaded / xhr.total * 100;
+            console.log( perc + '% loaded' );
+            
+            if( perc == 100 ) {
+                document.querySelector("#loader").innerHTML = null;
+            } else {
+                document.querySelector("#loader").innerHTML = `Loading...${Math.round(perc, 2)}% downloaded`;
+            }
 
         },
                 
@@ -217,7 +216,7 @@ function disposeModel() {
     }
 
 }
-        
+ 
 /************************ LIGHTING *************************/
 
 //Creates World Lights
@@ -266,9 +265,11 @@ function addSpotLights() {
     }
     
     //Positions lights
-    spotLights[0].position.set( 0,modelHeight,modelHeight );
-    spotLights[1].position.set( -0.5*modelHeight,modelHeight,-1*modelHeight );
-    spotLights[2].position.set( modelHeight,modelHeight,0 );
+    //var depth = modelHeight/10;
+    var depth = modelHeight/2;
+    spotLights[0].position.set( 0,depth*2,depth );
+    spotLights[1].position.set( -0.5*depth,depth,-1*depth );
+    spotLights[2].position.set( depth,depth,0 );
 
 }
 
@@ -345,7 +346,7 @@ function showGrid() {
 
 }
 
-//Model  WIP
+//Model 
 function setSkinTone( color ) {
 
     var hexColor = new THREE.Color( parseInt( "0x"+color ) );
@@ -360,39 +361,6 @@ function setSkinTone( color ) {
         });
     }
 }
-/*
-//iterates through the meshes
-function findEyes( inc ) {
-
-    for (var j=0; j<meshes.length; j++) {
-        meshes[j].material.color = hexWhite; 
-    }
-    
-    i += inc;
-    
-    meshes[i].material.color = pink; 
-    console.log(meshes[i]);
-
-}
-*/
-/*
-function transparency( inc ) {
-
-    if ( root ) {
-    
-        root.traverse( function( child ) {
-            if ( child.isMesh && child.material.opacity+inc>=0 && child.material.opacity+inc<=1) {
-
-                child.material.opacity += inc; 
-                
-                console.log(child.material.opacity);
-
-            }
-        });
-    }
-
-}
-*/
 
 function modelReflectivity( inc ) {
 
@@ -420,7 +388,6 @@ function jointsVisible() {
     }
 }
 
-
 /************************ TRANSFORM CONTROLS *************************/
 
 function addControls(object, type) {
@@ -443,7 +410,6 @@ function addControls(object, type) {
 
 function controlHandle( size ) {
     
-    //var geometry = new THREE.SphereGeometry( size, 10, 10 );
     var geometry = new THREE.TorusGeometry( size, size/2.5, 10, 10 );
     var material = new THREE.MeshPhongMaterial( { 
         depthTest: false,
@@ -463,6 +429,13 @@ function controlHandle( size ) {
 
 document.addEventListener('mousedown', function (event) {
 
+    event.preventDefault();
+    moveJoint( event.clientX, event.clientY );
+    
+}, false);
+
+document.addEventListener('touchstart', function (event) {
+    
     event.preventDefault();
     moveJoint( event.clientX, event.clientY );
     
