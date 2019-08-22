@@ -436,8 +436,8 @@ document.addEventListener('mousedown', function (event) {
 
 document.addEventListener('touchstart', function (event) {
     
-    event.preventDefault();
-    moveJoint( event.clientX, event.clientY );
+    //event.preventDefault();
+    moveJoint( event.touches[0].clientX, event.touches[0].clientY );
     
 }, false);
 

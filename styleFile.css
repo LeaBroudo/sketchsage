@@ -36,8 +36,10 @@ input {
 }
 
 .right-links {
-    /*right: 50;*/
+    /*right: 0;*/
+    padding-left: 100;
     float: right;
+
     font-family: "shrikhand";
     font-size: 20px;
 }
@@ -60,7 +62,7 @@ footer {
 }
 
 .sidebar {
-    width: 200px;
+    width: 220px;
     height: 100%;
     top: 1; 
     right: 0;
@@ -99,7 +101,7 @@ footer {
 }
 
 .function {
-    width: 60px;
+    width: 80px;
 }
   
 /* Clear floats after the columns */
