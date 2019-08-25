@@ -128,7 +128,7 @@ function uploadModel( path ) {
 
                     } else {
 
-                        var joint = controlHandle( jointSize );
+                        var joint = controlHandle( jointSize*1.2 );
 
                     }
                     
@@ -384,7 +384,8 @@ function jointsVisible() {
     }
 
     if (selectedControls) {
-        selectedControls.visible = opp;
+        //selectedControls.visible = opp;
+        selectedControls.detach();
     }
 }
 
@@ -410,10 +411,12 @@ function addControls(object, type) {
 
 function controlHandle( size ) {
     
-    var geometry = new THREE.TorusGeometry( size, size/2.5, 10, 10 );
+    //var geometry = new THREE.TorusGeometry( size, size/2.5, 10, 10 );
+    var geometry = new THREE.SphereGeometry( size, 10, 10 );
     var material = new THREE.MeshPhongMaterial( { 
         depthTest: false,
-        color: hexWhite
+        color: hexWhite,
+        wireframe: true
     } );
 
     var handle = new THREE.Mesh( geometry, material );
